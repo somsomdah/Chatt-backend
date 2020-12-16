@@ -8,7 +8,7 @@ from .models import *
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        exclude = ['last_login', 'is_superuser', 'is_staff', 'date_joined', 'groups', 'user_permissions']
+        exclude = ['last_login', 'date_joined', 'groups', 'user_permissions']
 
     def create(self, validated_data):
         user = User(**validated_data)
@@ -46,16 +46,21 @@ class PasswordChangeSerializer(serializers.Serializer):
         return value
 
 
-class AuthUserSerializer(serializers.ModelSerializer):
-    auth_token = serializers.SerializerMethodField()  # custom field 정의
-
+class RelatedLocationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        exclude = ['password', 'last_login', 'is_superuser', 'is_staff', 'date_joined', 'groups', 'user_permissions']
+        model = RelatedLocation
+        fields = '__all__'
 
-    def get_auth_token(self, obj):
-        token = Token.objects.create(user=obj)
-        return token.key
+
+class EnrollmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Enrollment
+        fields = '__all__'
+
+class CourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Course
+        fields='__all__'
 
 
 class EmptySerializer(serializers.Serializer):

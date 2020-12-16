@@ -5,6 +5,6 @@ from .views import *
 router=routers.DefaultRouter()
 
 router.register(r'user',UserViewSet)
-router.register(r'auth',AuthViewSet,basename='auth')
+#router.register(r'auth',AuthViewSet,basename='auth')
 
 urlpatterns=router.urls
