@@ -2,11 +2,10 @@ from django.contrib.auth import authenticate
 from rest_framework import serializers
 from .models import *
 
-def get_and_authenticate_user(username,password):
-    # username, password를 통해 유저 찾기
-    user=authenticate(username=username,password=password)
+def get_and_authenticate_user(username, password):
+    user = authenticate(username=username, password=password)
     if user is None:
-        raise serializers.ValidationError("invalid username/password")
+        raise serializers.ValidationError("Invalid email/password")
     return user
 
 def create_user_account(username,password,first_name,last_name,email,phone,location_gu,location_dong,**extra_fields):
