@@ -2,7 +2,8 @@ asgiref==3.2.10
 Django==3.0.8
 pytz==2020.1
 sqlparse==0.3.1
-django-extentions==3.0.9
+django-extensions==3.0.9
 djangorestframework~=3.12.1
 django-filter~=2.4.0
 mysqlclient==2.0.0
+pillow==8.0.1

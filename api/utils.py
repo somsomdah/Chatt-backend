@@ -5,7 +5,7 @@ from .models import *
 def get_and_authenticate_user(username, password):
     user = authenticate(username=username, password=password)
     if user is None:
-        raise serializers.ValidationError("Invalid email/password")
+        raise serializers.ValidationError("Invalid username/password")
     return user
 
 def create_user_account(username,password,first_name,last_name,email,phone,location_gu,location_dong,**extra_fields):
