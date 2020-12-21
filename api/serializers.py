@@ -12,9 +12,14 @@ class UserSerializer(serializers.ModelSerializer):
         exclude = ['last_login', 'date_joined', 'groups', 'user_permissions']
 
     def create(self, validated_data):
-        user = User(**validated_data)
-        user.set_password(validated_data['password'])
-        user.save()
+        '''
+        user = User(username=validated_data["username"],phone=validated_data["phone"],
+                    location_gu=validated_data["location_gu"],location_dong=validated_data["location_dong"],
+                    email=validated_data["email"],first_name=validated_data["first_name"],last_name=validated_data["last_name"])
+        '''
+        user=User.objects.create_user(**validated_data)
+        #user.set_password(validated_data['password'])
+        #user.save()
         return user
 
     def validate_username(self, value):
@@ -29,8 +34,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserLoginSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=120)
-    password = serializers.CharField(write_only=True)
+    username = serializers.CharField(max_length=120,required=True)
+    password = serializers.CharField(required=True, write_only=True)
 
 
 class PasswordChangeSerializer(serializers.Serializer):

@@ -14,24 +14,23 @@ import os,json
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+AUTH_USER_MODEL = 'api.User'
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = '4(mgef=ysb_)kmx-)jt4c2a%c%m!hc2rf2p+%1$x#1fg40iq+8'
 
 with open(os.path.join(BASE_DIR,'secrets.json')) as secret_file:
     secrets=json.load(secret_file)
-SECRET_KEY = secrets["SECRET_KEY"]
 
+SECRET_KEY = secrets["SECRET_KEY"]
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = secrets["ALLOWED_HOSTS"]
+ALLOWED_HOSTS = []
 
-AUTH_USER_MODEL="api.User"
 
 # Application definition
 
@@ -43,6 +42,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'django_extensions',
+    'django_filters',
     'rest_framework.authtoken',
     'api',
 ]
@@ -54,6 +55,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ]
 }
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -91,6 +93,8 @@ WSGI_APPLICATION = 'server.wsgi.application'
 
 DATABASES = secrets["DB_SETTINGS"]
 
+
+
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
 
@@ -116,6 +120,7 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'Asia/Seoul'
+#TIME_ZONE = 'UTC'
 
 USE_I18N = True
 

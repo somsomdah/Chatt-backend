@@ -74,7 +74,8 @@ class CourseTime(models.Model):
     enrollment=models.ForeignKey('Enrollment',null=True,blank=True,on_delete=models.CASCADE,related_name='course_times')
     day=models.PositiveIntegerField(validators=[MinValueValidator(0),MaxValueValidator(6)])
     time=models.PositiveIntegerField(validators=[MinValueValidator(6),MaxValueValidator(22)])
-    valid=models.BooleanField()
+    reserved=models.BooleanField(default=False)
+    valid=models.BooleanField(default=True)
 
     def __str__(self):
         return "{} : {} : {} : {}".format(self.course.name,self.day,self.time,self.valid)

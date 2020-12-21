@@ -28,7 +28,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def login(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = get_and_authenticate_user(request.data["username"],request.data["password"])
+        user = get_and_authenticate_user(**serializer.validated_data)
         data = UserSerializer(user).data
         login(request,user)
         return response.Response(data=data, status=status.HTTP_200_OK)
@@ -97,22 +97,29 @@ class CourseViewSet(viewsets.ModelViewSet):
         'register' : CourseRegisterSerializer,
     }
 
-    # 여기 확인하기
+
+    # 특정 강좌 수강예약
     @action(methods=['post'],detail=True,url_path='register')
     def register(self,request,pk):
-        course=Course.objects.get_object_or_404(pk=pk)
+        course=get_object_or_404(Course,pk=pk)
         enrollment=Enrollment.objects.create(student_id=request.user.id,course_id=pk,
-                                             start_date=timezone.now().date(),end_date=start_date+timezone.timedelta(time=course.duration),
+                                             start_date=timezone.now().date(),
+                                             end_date=timezone.now().date()+timezone.timedelta(days=course.duration),
                                              left_count=course.count,valid=True)
-        serializer=self.get_serializer(request.data)
+        serializer=self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        day,time=serializer.validated_data
+        day,time=request.data["day"],request.data["time"]
 
         course_time_qs=course.course_times.all()
-        course_time_obj=course_time_qs.get_object_or_404(day=day,time=time)
-        course_time_obj.valid=0
+        course_time_obj=course_time_qs.get(day=day,time=time)
+        if course_time_obj.valid==True:
+            return response.Response({"failed" : "Course Time Already Taken"},status=status.HTTP_400_BAD_REQUEST)
+        course_time_obj.reserved=True
         course_time_obj.enrollment_id=enrollment.id
+        course_time_obj.save()
+
+        return response.Response(EnrollmentSerializer(enrollment).data,status=status.HTTP_201_CREATED)
 
 
     def get_serializer_class(self):
