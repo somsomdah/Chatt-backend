@@ -57,16 +57,61 @@ class UserViewSet(viewsets.ModelViewSet):
         data={"success": "Password Changed"}
         return response.Response(data=data,status=status.HTTP_200_OK)
 
-    @action(methods=['get'],detail=False,url_path='find-teachers')
-    def find_teachers(self,request):
 
-        help='Find teachers who are available to visit the customer'
+
+class CourseViewSet(viewsets.ModelViewSet):
+    serializer_class=CourseSerializer
+    queryset=Course.objects.all()
+    permissions_classes = [permissions.IsAuthenticated, ]
+    serializer_classes = {
+        'reserve' : CourseRegisterSerializer,
+        'check_times': CourseTimeSerializer
+    }
+
+
+    @action(methods=['post'],detail=True,url_path='reserve')
+    def reserve(self,request,pk):
+
+        help="Reserve a course, it is different from registering one, the course is registered only after payment"
+
+        course=get_object_or_404(Course,pk=pk)
+        enrollment=Enrollment.objects.create(student_id=request.user.id,course_id=pk,
+                                             start_date=timezone.now().date(),
+                                             end_date=timezone.now().date()+timezone.timedelta(days=course.duration),
+                                             left_count=course.count,valid=False)
+        serializer=self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        day,time=request.data["day"],request.data["time"]
+
+        course_time_qs=course.course_times.all()
+        course_time_obj=course_time_qs.get(day=day,time=time)
+        if course_time_obj.valid==False:
+            return response.Response({"failed" : "Course Time Already Taken"},status=status.HTTP_400_BAD_REQUEST)
+        course_time_obj.reserved=True
+        course_time_obj.enrollment_id=enrollment.id
+        course_time_obj.save()
+
+        return response.Response(EnrollmentSerializer(enrollment).data,status=status.HTTP_201_CREATED)
+
+    @action(methods=['get'],detail=True,url_path='times')
+    def check_times(self,request,pk):
+        help="Get course times of a specific course"
+
+        course=get_object_or_404(Course,pk=pk)
+        serializer=self.get_serializer(course.course_times,many=True)
+
+        return response.Response(serializer.data,status=status.HTTP_200_OK)
+
+    @action(methods=['get'],detail=False,url_path='availables')
+    def check_avaliables(self,request):
+        help='Get courses and course times that are available for the user'
 
         gu=request.user.location_gu
         dong=request.user.location_dong
 
         teacher_ids=RelatedLocation.objects.filter(gu=gu,dong=dong).values_list('teacher_id', flat=True)
-        serializer=self.get_serializer(Teacher.objects.filter(id__in=teacher_ids),many=True)
+        serializer=CourseSerializer(Course.objects.filter(techer_id__in=teacher_ids),many=True)
 
         return response.Response(serializer.data,status=status.HTTP_200_OK)
 
@@ -75,7 +120,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         help='Check courses that the customer had registered'
 
-        enrollments=Enrollment.objects.filter(student_id=request.user.id)
+        enrollments=Enrollment.objects.filter(student_id=request.user.id,valid=True)
         serializer=EnrollmentSerializer(enrollments,many=True)
 
         return response.Response(serializer.data,status=status.HTTP_200_OK)
@@ -86,40 +131,6 @@ class UserViewSet(viewsets.ModelViewSet):
         if self.action in self.serializer_classes.keys():
             return self.serializer_classes[self.action]
         return super().get_serializer_class()
-
-
-
-class CourseViewSet(viewsets.ModelViewSet):
-    serializer_class=CourseSerializer
-    queryset=Course.objects.all()
-    permissions_classes = [permissions.IsAuthenticated, ]
-    serializer_classes = {
-        'register' : CourseRegisterSerializer,
-    }
-
-
-    # 특정 강좌 수강예약
-    @action(methods=['post'],detail=True,url_path='register')
-    def register(self,request,pk):
-        course=get_object_or_404(Course,pk=pk)
-        enrollment=Enrollment.objects.create(student_id=request.user.id,course_id=pk,
-                                             start_date=timezone.now().date(),
-                                             end_date=timezone.now().date()+timezone.timedelta(days=course.duration),
-                                             left_count=course.count,valid=True)
-        serializer=self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        day,time=request.data["day"],request.data["time"]
-
-        course_time_qs=course.course_times.all()
-        course_time_obj=course_time_qs.get(day=day,time=time)
-        if course_time_obj.valid==True:
-            return response.Response({"failed" : "Course Time Already Taken"},status=status.HTTP_400_BAD_REQUEST)
-        course_time_obj.reserved=True
-        course_time_obj.enrollment_id=enrollment.id
-        course_time_obj.save()
-
-        return response.Response(EnrollmentSerializer(enrollment).data,status=status.HTTP_201_CREATED)
 
 
     def get_serializer_class(self):

@@ -12,14 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
         exclude = ['last_login', 'date_joined', 'groups', 'user_permissions']
 
     def create(self, validated_data):
-        '''
-        user = User(username=validated_data["username"],phone=validated_data["phone"],
-                    location_gu=validated_data["location_gu"],location_dong=validated_data["location_dong"],
-                    email=validated_data["email"],first_name=validated_data["first_name"],last_name=validated_data["last_name"])
-        '''
         user=User.objects.create_user(**validated_data)
-        #user.set_password(validated_data['password'])
-        #user.save()
         return user
 
     def validate_username(self, value):
@@ -106,6 +99,7 @@ class CourseSerializer(serializers.ModelSerializer):
 class CourseRegisterSerializer(serializers.Serializer):
     day=serializers.IntegerField(validators=[MinValueValidator(0),MaxValueValidator(6)])
     time=serializers.IntegerField(validators=[MinValueValidator(6),MaxValueValidator(22)])
+
 
 class EmptySerializer(serializers.Serializer):
     pass

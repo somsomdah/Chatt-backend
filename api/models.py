@@ -14,13 +14,14 @@ class User(AbstractUser):
 
 
 class Teacher(models.Model):
-    image=models.ImageField()
+    image=models.ImageField(null=True,upload_to='image')
     name=models.CharField(max_length=20)
     phone=models.CharField(max_length=20)
     information=models.TextField()
     career1=models.CharField(max_length=100,null=True,blank=True)
     career2=models.CharField(max_length=100,null=True,blank=True)
     career3 = models.CharField(max_length=100,null=True,blank=True)
+    career4 = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):
         return "{}".format(self.name)
