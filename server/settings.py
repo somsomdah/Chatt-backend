@@ -15,6 +15,7 @@ import os,json
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AUTH_USER_MODEL = 'api.User'
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 
 # Quick-start development settings - unsuitable for production
@@ -47,6 +48,14 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'api',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ]
+}
 
 
 MIDDLEWARE = [

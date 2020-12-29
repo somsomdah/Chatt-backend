@@ -27,7 +27,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserLoginSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=120,required=True)
+    username = serializers.CharField(max_length=300, required=True)
     password = serializers.CharField(required=True, write_only=True)
 
 
@@ -61,21 +61,11 @@ class CourseTimeSerializer(serializers.ModelSerializer):
         model=CourseTime
         fields="__all__"
 
-class EnrollmentSerializer(serializers.ModelSerializer):
-    course=serializers.SerializerMethodField()
-    times=serializers.SerializerMethodField()
 
+class EnrollmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Enrollment
         fields = '__all__'
-
-    def get_times(self,obj):
-        serializer=CourseTimeSerializer(CourseTime.objects.filter(enrollment_id=obj.id),many=True)
-        return serializer.data
-
-    def get_course(self,obj):
-        serializer=CourseSerializer(Course.objects.get(id=obj.course_id))
-        return serializer.data
 
 
 class CourseDetailSerilizer(serializers.ModelSerializer):
@@ -83,9 +73,9 @@ class CourseDetailSerilizer(serializers.ModelSerializer):
         model=CourseDetail
         fields='__all__'
 
-class CourseSerializer(serializers.ModelSerializer):
 
-    teacher=serializers.SerializerMethodField()
+class CourseSerializer(serializers.ModelSerializer):
+    teacher=TeacherSerializer(many=False)
     course_details=CourseDetailSerilizer(many=True)
     course_times=CourseTimeSerializer(many=True)
 
@@ -93,12 +83,25 @@ class CourseSerializer(serializers.ModelSerializer):
         model=Course
         fields="__all__"
 
-    def get_teacher(self,obj):
-        return TeacherSerializer(Teacher.objects.get(id=obj.teacher_id)).data
 
-class CourseRegisterSerializer(serializers.Serializer):
+class PackageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Package
+        fields="__all__"
+
+
+class CourseReservationSerializer(serializers.Serializer):
     day=serializers.IntegerField(validators=[MinValueValidator(0),MaxValueValidator(6)])
     time=serializers.IntegerField(validators=[MinValueValidator(6),MaxValueValidator(22)])
+    package_count=serializers.IntegerField()
+    start_date=serializers.DateField()
+
+class CourseAbstractSerializer(serializers.ModelSerializer):
+    teacher=TeacherSerializer()
+    class Meta:
+        model=Course
+        fields="__all__"
+
 
 
 class EmptySerializer(serializers.Serializer):
