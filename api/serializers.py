@@ -44,16 +44,17 @@ class PasswordChangeSerializer(serializers.Serializer):
         password_validation.validate_password(value)
         return value
 
-class TeacherSerializer(serializers.ModelSerializer):
-    class Meta:
-        model=Teacher
-        fields="__all__"
-
 
 class RelatedLocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = RelatedLocation
         fields = '__all__'
+
+class TeacherSerializer(serializers.ModelSerializer):
+    related_locations=RelatedLocationSerializer(many=True)
+    class Meta:
+        model=Teacher
+        fields="__all__"
 
 
 class CourseTimeSerializer(serializers.ModelSerializer):
@@ -101,7 +102,6 @@ class CourseAbstractSerializer(serializers.ModelSerializer):
     class Meta:
         model=Course
         fields="__all__"
-
 
 
 class EmptySerializer(serializers.Serializer):

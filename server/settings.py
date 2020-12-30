@@ -30,7 +30,7 @@ SECRET_KEY = secrets["SECRET_KEY"]
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = secrets["ALLOWED_HOSTS"]
 
 
 # Application definition
@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_extensions',
     'django_filters',
-    'rest_framework.authtoken',
+    'background_task',
     'api',
 ]
 
@@ -57,6 +57,21 @@ REST_FRAMEWORK = {
     ]
 }
 
+'''
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+}
+'''
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

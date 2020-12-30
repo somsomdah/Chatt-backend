@@ -15,6 +15,7 @@ class User(AbstractUser):
 
 class Teacher(models.Model):
     image=models.ImageField(null=True,blank=True,upload_to='image')
+    image=models.ImageField()
     name=models.CharField(max_length=20)
     nickname=models.CharField(max_length=40)
     phone=models.CharField(max_length=20)
@@ -101,7 +102,7 @@ class CourseTime(models.Model):
 
 class CourseDetail(models.Model):
     course=models.ForeignKey('Course',on_delete=models.CASCADE,related_name='course_details')
-    index=models.PositiveIntegerField()
+    week=models.PositiveIntegerField()
     content=models.TextField()
 
     def __str__(self):
