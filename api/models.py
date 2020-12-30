@@ -15,7 +15,6 @@ class User(AbstractUser):
 
 class Teacher(models.Model):
     image=models.ImageField(null=True,blank=True,upload_to='image')
-    image=models.ImageField()
     name=models.CharField(max_length=20)
     nickname=models.CharField(max_length=40)
     phone=models.CharField(max_length=20)
