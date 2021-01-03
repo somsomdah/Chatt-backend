@@ -8,10 +8,9 @@ from django.db.models import F, Q, Count
 
 from .serializers import *
 from .models import *
-from .tasks import *
 from .utils import *
 
-import datetime
+from datetime import datetime,timedelta
 
 # Create your views here.
 
@@ -33,6 +32,9 @@ class UserViewSet(viewsets.ModelViewSet):
         user = get_and_authenticate_user(**serializer.validated_data)
         data = UserSerializer(user).data
         login(request,user)
+        #print(request.user.is_authenticated)
+        #for key in request.session.keys():
+            #print("key:=>" + request.session[key])
 
         return response.Response(data=data, status=status.HTTP_200_OK)
 
@@ -67,6 +69,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(methods=['get'],detail=False,url_path='check-authentication')
     def check_authentication(self,request):
+        #print(request.user.is_authenticated)
         if request.user.is_authenticated:
             return response.Response(data={'login':True},status=status.HTTP_200_OK)
         else:
@@ -76,14 +79,22 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(methods=['get'],detail=False,url_path='enrollments')
     def check_enrollments(self,request):
         if not request.user.is_authenticated:
-            return response.Response(data={'failed' : 'User Not Logged In'},status=status.HTTP_400_BAD_REQUEST)
+            return response.Response(data={'failed' : 'User Not Logged In'},status=status.HTTP_401_UNAUTHORIZED)
 
         help='Check courses that the customer had registered'
         expire_enrollments()
 
-        # left_count 계산하는 코드 넣기
-
         enrollments=Enrollment.objects.filter(user_id=request.user.id)
+
+        for e in enrollments:
+            if e.valid==True:
+                if (e.lesson_day==datetime.today().weekday() and e.lesson_time<datetime.now().hour) or e.lesson_day<datetime.today().weekday():
+                    x=(datetime.now().date()-e.start_date).days
+                    for i in range(1,e.package.duration+1):
+                        if 7*(i-1)<=x<7*i:
+                            e.left_count=e.package.count-i
+                            e.save()
+
         serializer=EnrollmentSerializer(enrollments,many=True)
 
         return response.Response(serializer.data,status=status.HTTP_200_OK)
@@ -123,7 +134,7 @@ class CourseViewSet(viewsets.ModelViewSet):
             return response.Response(data={'failed' : 'Course Time Not Available'},status=status.HTTP_400_BAD_REQUEST)
 
         course_time_obj=course_time_qs[0]
-        if course_time_obj.valid==True:
+        if course_time_obj.taken==True:
             return response.Response(data={"failed" : "Course Time Already Taken"},status=status.HTTP_400_BAD_REQUEST)
 
         y,m,d=map(int,start_date.split('-'))
@@ -132,11 +143,11 @@ class CourseViewSet(viewsets.ModelViewSet):
         enrollment=Enrollment.objects.create(user_id=request.user.id,course_id=pk,package_id=package_obj.id,
                                              start_date=start_date,
                                              end_date=start_date+timezone.timedelta(days=package_obj.duration),
-                                             left_count=package_obj.count,valid=False,
+                                             left_count=package_obj.count,valid=True,paid=False,
                                              lesson_day=day,lesson_time=time)
 
         course_time_obj.enrollment_id=enrollment.id
-        course_time_obj.valid=False
+        course_time_obj.taken=True
         course_time_obj.save()
 
         return response.Response(EnrollmentSerializer(enrollment).data,status=status.HTTP_201_CREATED)

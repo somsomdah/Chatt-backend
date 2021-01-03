@@ -54,7 +54,8 @@ class Enrollment(models.Model):
     lesson_time=models.PositiveIntegerField(validators=[MinValueValidator(6),MaxValueValidator(22)],null=True,blank=True)
 
     left_count=models.PositiveIntegerField(default=4)
-    valid=models.BooleanField(default=True)
+    paid=models.BooleanField(default=False)
+    valid=models.BooleanField(default=True) # valid == false means the enrollment is expired
 
     def __str__(self):
         return "{} : {} : {}{} : {} {} :  (남은횟수){} : (유효성){}".format(self.course.category, self.course.name,
@@ -94,7 +95,7 @@ class CourseTime(models.Model):
     enrollment=models.OneToOneField('Enrollment',null=True,blank=True,on_delete=models.CASCADE,related_name='course_time')
     day=models.PositiveIntegerField(choices=((0,'mon'),(1,'tue'),(2,'wed'),(3,'thu'),(4,'fri'),(5,'sat'),(6,'sun')))
     time=models.PositiveIntegerField(validators=[MinValueValidator(6),MaxValueValidator(22)])
-    valid=models.BooleanField(default=True)
+    taken=models.BooleanField(default=True)
 
     def __str__(self):
         return "{} : {} : {} : {}".format(self.course.name,self.day,self.time,self.valid)

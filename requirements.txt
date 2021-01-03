@@ -7,4 +7,3 @@ djangorestframework~=3.12.1
 django-filter~=2.4.0
 mysqlclient==2.0.0
 pillow==8.0.1
-django-background-tasks==1.2.5
