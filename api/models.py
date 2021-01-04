@@ -95,10 +95,10 @@ class CourseTime(models.Model):
     enrollment=models.OneToOneField('Enrollment',null=True,blank=True,on_delete=models.CASCADE,related_name='course_time')
     day=models.PositiveIntegerField(choices=((0,'mon'),(1,'tue'),(2,'wed'),(3,'thu'),(4,'fri'),(5,'sat'),(6,'sun')))
     time=models.PositiveIntegerField(validators=[MinValueValidator(6),MaxValueValidator(22)])
-    taken=models.BooleanField(default=True)
+    taken=models.BooleanField(default=False)
 
     def __str__(self):
-        return "{} : {} : {} : {}".format(self.course.name,self.day,self.time,self.valid)
+        return "{} : {} : {} : {}".format(self.course.name,self.day,self.time,self.taken)
 
 class CourseDetail(models.Model):
     course=models.ForeignKey('Course',on_delete=models.CASCADE,related_name='course_details')
@@ -109,9 +109,9 @@ class CourseDetail(models.Model):
         return '{} : {} : {}'.format(self.course.name,self.week,self.content)
 
 class Appointment(models.Model):
-    user=models.OneToOneField('User',on_delete=models.CASCADE,related_name='user')
+    user=models.ForeignKey('User',on_delete=models.CASCADE,related_name='user')
     date=models.DateField()
     time=models.PositiveIntegerField()
     level=models.PositiveIntegerField(choices=((1,'beginner'),(2,'intermediate'),(3,'advanced')))
-    note=models.TextField()
-    completed=models.BooleanField()
+    note=models.TextField(blank=True,null=True)
+    completed=models.BooleanField(default=False)

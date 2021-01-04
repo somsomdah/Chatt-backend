@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import password_validation
 from django.core.validators import MaxValueValidator, MinValueValidator
-
+from rest_framework.authtoken.models import Token
 
 from .models import *
 
@@ -10,6 +10,8 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         exclude = ['last_login', 'date_joined', 'groups', 'user_permissions']
+
+    #auth_token=serializers.SerializerMethodField()
 
     def create(self, validated_data):
         user=User.objects.create_user(**validated_data)
@@ -24,6 +26,10 @@ class UserSerializer(serializers.ModelSerializer):
     def validate_password(self, value):
         password_validation.validate_password(value)
         return value
+
+    #def get_auth_token(self, obj):
+        #token = Token.objects.create(user=obj)
+        #return token.key
 
 
 class UserLoginSerializer(serializers.Serializer):
@@ -45,6 +51,13 @@ class PasswordChangeSerializer(serializers.Serializer):
         return value
 
 
+class AppointmentMakeSerializer(serializers.Serializer):
+    date=serializers.DateField()
+    time=serializers.IntegerField()
+    level=serializers.ChoiceField(choices=[1,2,3])
+    note=serializers.CharField(allow_blank=True,allow_null=True)
+
+
 class RelatedLocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = RelatedLocation
@@ -61,12 +74,6 @@ class CourseTimeSerializer(serializers.ModelSerializer):
     class Meta:
         model=CourseTime
         fields="__all__"
-
-
-class EnrollmentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Enrollment
-        fields = '__all__'
 
 
 class CourseDetailSerilizer(serializers.ModelSerializer):
@@ -97,10 +104,31 @@ class CourseReservationSerializer(serializers.Serializer):
     package_count=serializers.IntegerField()
     start_date=serializers.DateField()
 
+
 class CourseAbstractSerializer(serializers.ModelSerializer):
     teacher=TeacherSerializer()
     class Meta:
         model=Course
+        fields="__all__"
+
+
+class EnrollmentSerializer(serializers.ModelSerializer):
+    course=CourseAbstractSerializer()
+    package=PackageSerializer()
+    class Meta:
+        model = Enrollment
+        fields = '__all__'
+
+
+class RecordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Record
+        fields="__all__"
+
+
+class AppointmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Appointment
         fields="__all__"
 
 

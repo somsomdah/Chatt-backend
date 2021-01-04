@@ -10,7 +10,7 @@ from .serializers import *
 from .models import *
 from .utils import *
 
-from datetime import datetime,timedelta
+from datetime import datetime,timedelta,date
 
 # Create your views here.
 
@@ -31,21 +31,24 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         user = get_and_authenticate_user(**serializer.validated_data)
         data = UserSerializer(user).data
+
         login(request,user)
-        #print(request.user.is_authenticated)
-        #for key in request.session.keys():
-            #print("key:=>" + request.session[key])
 
         return response.Response(data=data, status=status.HTTP_200_OK)
 
 
     @action(methods=['post'],detail=False,url_path='register',permissions_classes=[permissions.AllowAny])
     def register(self,request):
+
+
         serializer=self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user=create_user_account(**serializer.validated_data)
         data=UserSerializer(user).data
-        login(request,user) # 회원가입과 동시에 로그인 가능
+
+        login(request,user)
+
+        update_enrollment_left_count()
         expire_enrollments()
 
         return response.Response(data=data,status=status.HTTP_201_CREATED)
@@ -67,37 +70,13 @@ class UserViewSet(viewsets.ModelViewSet):
         data={"success": "Password Changed"}
         return response.Response(data=data,status=status.HTTP_200_OK)
 
+
     @action(methods=['get'],detail=False,url_path='check-authentication')
     def check_authentication(self,request):
-        #print(request.user.is_authenticated)
         if request.user.is_authenticated:
             return response.Response(data={'login':True},status=status.HTTP_200_OK)
         else:
-            return response.Response(data={'login':False},status=status.HTTP_200_OK)
-
-
-    @action(methods=['get'],detail=False,url_path='enrollments')
-    def check_enrollments(self,request):
-        if not request.user.is_authenticated:
-            return response.Response(data={'failed' : 'User Not Logged In'},status=status.HTTP_401_UNAUTHORIZED)
-
-        help='Check courses that the customer had registered'
-        expire_enrollments()
-
-        enrollments=Enrollment.objects.filter(user_id=request.user.id)
-
-        for e in enrollments:
-            if e.valid==True:
-                if (e.lesson_day==datetime.today().weekday() and e.lesson_time<datetime.now().hour) or e.lesson_day<datetime.today().weekday():
-                    x=(datetime.now().date()-e.start_date).days
-                    for i in range(1,e.package.duration+1):
-                        if 7*(i-1)<=x<7*i:
-                            e.left_count=e.package.count-i
-                            e.save()
-
-        serializer=EnrollmentSerializer(enrollments,many=True)
-
-        return response.Response(serializer.data,status=status.HTTP_200_OK)
+            return response.Response(data={'login':False},status=status.HTTP_401_UNAUTHORIZED)
 
 
     def get_serializer_class(self):
@@ -112,7 +91,7 @@ class UserViewSet(viewsets.ModelViewSet):
 class CourseViewSet(viewsets.ModelViewSet):
     serializer_class=CourseSerializer
     queryset=Course.objects.all().annotate(enrollment_count=Count('enrollments')).order_by('-enrollment_count')
-    permissions_classes = [permissions.IsAuthenticated, ]
+    #permissions_classes = [permissions.IsAuthenticated, ]
     serializer_classes = {
         'reserve' : CourseReservationSerializer,
         'check_times': CourseTimeSerializer,
@@ -122,7 +101,12 @@ class CourseViewSet(viewsets.ModelViewSet):
     @action(methods=['post'],detail=True,url_path='reserve')
     def reserve(self,request,pk):
         help='reserve a course'
+
+        update_enrollment_left_count()
         expire_enrollments()
+
+        if not request.user.is_authenticated:
+            return response.Response(data={'failed' : 'User Not Logged In'},status=status.HTTP_401_UNAUTHORIZED)
 
         course=get_object_or_404(Course,pk=pk)
         serializer=self.get_serializer(data=request.data)
@@ -130,15 +114,15 @@ class CourseViewSet(viewsets.ModelViewSet):
         day,time,package_count,start_date=request.data["day"],request.data["time"],request.data["package_count"],request.data["start_date"]
 
         course_time_qs=course.course_times.all().filter(day=day,time=time)
-        if not course_time_qs:
+        if not course_time_qs: # 강좌에 해당 시간이 열리지 않았을 때
             return response.Response(data={'failed' : 'Course Time Not Available'},status=status.HTTP_400_BAD_REQUEST)
 
         course_time_obj=course_time_qs[0]
-        if course_time_obj.taken==True:
+        if course_time_obj.taken==True: # 강좌의 해당 시간을 이미 다른 사람이 쓰고 있을 때
             return response.Response(data={"failed" : "Course Time Already Taken"},status=status.HTTP_400_BAD_REQUEST)
 
         y,m,d=map(int,start_date.split('-'))
-        start_date=datetime.date(y,m,d)
+        start_date=date(y,m,d)
         package_obj=Package.objects.get(count=package_count)
         enrollment=Enrollment.objects.create(user_id=request.user.id,course_id=pk,package_id=package_obj.id,
                                              start_date=start_date,
@@ -177,7 +161,7 @@ class CourseViewSet(viewsets.ModelViewSet):
         return response.Response(serializer.data,status=status.HTTP_200_OK)
 
 
-    @action(methods=['get'],detail=False,url_path='weekly')
+    @action(methods=['get'],detail=False,url_path='weekly')#,permissions_classes=[permissions.AllowAny])
     def show_by_week(self,request):
         help= "Show courses by day of the week"
         expire_enrollments()
@@ -220,7 +204,83 @@ class CourseViewSet(viewsets.ModelViewSet):
 class EnrollmentViewSet(viewsets.ModelViewSet):
     serializer_class=EnrollmentSerializer
     queryset=Enrollment.objects.all()
+    permissions_classes = [permissions.IsAuthenticated, ]
 
+    @action(methods=['get'],detail=False,url_path='history')
+    def show_enrollment_history(self,request):
+        update_enrollment_left_count()
+        expire_enrollments()
+        enrollments=Enrollment.objects.filter(user_id=request.user.id).order_by('-start_date')
+        serializer=EnrollmentSerializer(enrollments,many=True)
+        return response.Response(data=serializer.data,status=status.HTTP_200_OK)
+
+    @action(methods=['get'],detail=False,url_path='unpaid')
+    def show_enrollments_not_paid(self,request):
+        update_enrollment_left_count()
+        expire_enrollments()
+
+        enrollments=Enrollment.objects.filter(user_id=request.user.id).order_by('-start_date')
+
+        serializer=EnrollmentSerializer(enrollments,many=True)
+        return response.Response(data=serializer.data,status=status.HTTP_200_OK)
+
+    @action(methods=['get'],detail=False,url_path='current')
+    def show_current(self,request):
+        if not request.user.is_authenticated:
+            return response.Response(data={'failed' : 'User Not Logged In'},status=status.HTTP_401_UNAUTHORIZED)
+        help='Check courses that the customer had registered'
+        update_enrollment_left_count()
+        expire_enrollments()
+        enrollments=Enrollment.objects.filter(user_id=request.user.id,valid=True,left_count__gt=0)
+        serializer=EnrollmentSerializer(enrollments,many=True)
+        return response.Response(data=serializer.data,status=status.HTTP_200_OK)
+
+    @action(methods=['get'],detail=True,url_path='records')
+    def show_records(self,request,pk):
+        if not request.user.is_authenticated:
+            return response.Response(data={'failed' : 'User Not Logged In'},status=status.HTTP_401_UNAUTHORIZED)
+        enrollment=get_object_or_404(Enrollment,pk=pk)
+        records=enrollment.records.all()
+        serializer=RecordSerializer(records,many=True)
+
+        return response.Response(data=serializer.data,status=status.HTTP_200_OK)
+
+class AppointmentViewSet(viewsets.ModelViewSet):
+    serializer_class=AppointmentSerializer
+    queryset=Appointment.objects.all()
+    permissions_classes=[permissions.IsAuthenticated]
+
+    serializer_classes = {
+        'make_appointment' :AppointmentMakeSerializer
+    }
+
+    @action(methods=['post'],detail=False,url_path='make')
+    def make_appointment(self,request):
+        if not request.user.is_authenticated:
+            return response.Response(data={'failed' : 'User Not Logged In'},status=status.HTTP_401_UNAUTHORIZED)
+
+        appointment = Appointment.objects.create(user_id=request.user.id,
+                                                date=request.data['date'],
+                                                time=request.data['time'],
+                                                level=request.data['level'],
+                                                note=request.data['note'])
+        serializer=AppointmentSerializer(appointment)
+        return response.Response(data=serializer.data,status=status.HTTP_201_CREATED)
+
+    @action(methods=['get'],detail=False,url_path='show')
+    def show_appointments(self,request):
+        if not request.user.is_authenticated:
+            return response.Response(data={'failed' : 'User Not Logged In'},status=status.HTTP_401_UNAUTHORIZED)
+        appointments=Appointment.objects.filter(user_id=request.user.id)
+        serializer=AppointmentSerializer(appointments,many=True)
+        return response.Response(data=serializer.data,status=status.HTTP_200_OK)
+
+    def get_serializer_class(self):
+        if not isinstance(self.serializer_classes, dict):
+            raise ImproperlyConfigured("serializer_classes should be a dict mapping.")
+        if self.action in self.serializer_classes.keys():
+            return self.serializer_classes[self.action]
+        return super().get_serializer_class()
 
 
 class TeacherViewSet(viewsets.ModelViewSet):

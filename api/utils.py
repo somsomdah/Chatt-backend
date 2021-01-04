@@ -22,14 +22,23 @@ def create_user_account(username,password,first_name,last_name,email,phone,locat
 
 def expire_enrollments():
     enrollments=Enrollment.objects.filter(Q(end_date__lt=timezone.now().date())|Q(left_count__lte=0))
-    enrollments.update(valid=False)
+    enrollments.update(valid=False,left_count=0)
     expired_enrollment_ids=enrollments.values_list('id',flat=True)
     CourseTime.objects.filter(enrollment_id__in=expired_enrollment_ids).update(taken=False,enrollment_id=None)
 
-def update_enrollment_left_count(user):
-    user.enrollments.all().filter(valid=True,
-                                  lesson_day=datetime.datetime.today().weekday(),
-                                  lesson_time__lte=datetime.datetime.now().hour).update(left_count=F('left_count') - 1)
-    expire_enrollments()
 
+def update_enrollment_left_count():
+    enrollments=Enrollment.objects.all()
 
+    for enrollment in enrollments:
+        start_date=enrollment.start_date
+        today=datetime.date.today()
+        lesson_time=enrollment.lesson_time
+        now_hour=int(datetime.datetime.now().hour)
+
+        if (start_date==today and lesson_time<=now_hour) or start_date<today:
+            x=(today-start_date).days
+            for i in range(enrollment.package.count):
+                if 7*i<=x<7*(i+1):
+                    enrollment.left_count=enrollment.package.count-(i+1)
+                    enrollment.save()
