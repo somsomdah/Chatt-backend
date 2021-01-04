@@ -16,7 +16,7 @@ import os,json
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AUTH_USER_MODEL = 'api.User'
 #SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-
+SESSION_COOKIE_HTTPONLY = False
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/

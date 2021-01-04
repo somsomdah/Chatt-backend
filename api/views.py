@@ -48,6 +48,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
         login(request,user)
 
+        print("\n*******\n",request,"\n*******\n")
+
         update_enrollment_left_count()
         expire_enrollments()
 
@@ -56,6 +58,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(methods=['get'],detail=False,url_path='logout')
     def logout(self,request):
+
+        request.session.flush()
         logout(request)
         data={"sucsess":"Logout Successful"}
         return response.Response(data=data,status=status.HTTP_200_OK)
@@ -73,6 +77,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(methods=['get'],detail=False,url_path='check-authentication')
     def check_authentication(self,request):
+        print(request)
         if request.user.is_authenticated:
             return response.Response(data={'login':True},status=status.HTTP_200_OK)
         else:
