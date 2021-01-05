@@ -20,35 +20,22 @@ class UserViewSet(viewsets.ModelViewSet):
 
     permissions_classes = [permissions.IsAuthenticated, ]
     serializer_classes = {
-        'login' : UserLoginSerializer,
-        'register':UserSerializer,
+        'register':UserRegisterSerializer,
         'change_password':PasswordChangeSerializer
     }
 
-    @action(methods=['POST', ], detail=False,url_path='login',permissions_classes=[permissions.AllowAny])
-    def login(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = get_and_authenticate_user(**serializer.validated_data)
+    @action(methods=['get'], detail=False,url_path='information',permissions_classes=[permissions.AllowAny])
+    def information(self, request):
+        user = request.user
         data = UserSerializer(user).data
-
-        login(request,user)
-
         return response.Response(data=data, status=status.HTTP_200_OK)
 
 
     @action(methods=['post'],detail=False,url_path='register',permissions_classes=[permissions.AllowAny])
     def register(self,request):
 
-
-        serializer=self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user=create_user_account(**serializer.validated_data)
+        user=create_user_account(**request.data)
         data=UserSerializer(user).data
-
-        login(request,user)
-
-        print("\n*******\n",request,"\n*******\n")
 
         update_enrollment_left_count()
         expire_enrollments()
@@ -58,11 +45,12 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(methods=['get'],detail=False,url_path='logout')
     def logout(self,request):
+       refresh_token = request.data["refresh_token"]
+       token = RefreshToken(refresh_token)
+       token.blacklist()
+       data={"sucsess":"Logout Successful"}
 
-        request.session.flush()
-        logout(request)
-        data={"sucsess":"Logout Successful"}
-        return response.Response(data=data,status=status.HTTP_200_OK)
+       return Response(data=data,status=status.HTTP_205_RESET_CONTENT)
 
 
     @action(methods=['post'],detail=False,url_path='change-password')
@@ -81,7 +69,7 @@ class UserViewSet(viewsets.ModelViewSet):
         if request.user.is_authenticated:
             return response.Response(data={'login':True},status=status.HTTP_200_OK)
         else:
-            return response.Response(data={'login':False},status=status.HTTP_401_UNAUTHORIZED)
+            return response.Response(data={'login':False},status=status.HTTP_200_OK)
 
 
     def get_serializer_class(self):
@@ -96,7 +84,7 @@ class UserViewSet(viewsets.ModelViewSet):
 class CourseViewSet(viewsets.ModelViewSet):
     serializer_class=CourseSerializer
     queryset=Course.objects.all().annotate(enrollment_count=Count('enrollments')).order_by('-enrollment_count')
-    #permissions_classes = [permissions.IsAuthenticated, ]
+    permissions_classes = [permissions.IsAuthenticated, ]
     serializer_classes = {
         'reserve' : CourseReservationSerializer,
         'check_times': CourseTimeSerializer,
@@ -114,8 +102,6 @@ class CourseViewSet(viewsets.ModelViewSet):
             return response.Response(data={'failed' : 'User Not Logged In'},status=status.HTTP_401_UNAUTHORIZED)
 
         course=get_object_or_404(Course,pk=pk)
-        serializer=self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
         day,time,package_count,start_date=request.data["day"],request.data["time"],request.data["package_count"],request.data["start_date"]
 
         course_time_qs=course.course_times.all().filter(day=day,time=time)
@@ -123,7 +109,7 @@ class CourseViewSet(viewsets.ModelViewSet):
             return response.Response(data={'failed' : 'Course Time Not Available'},status=status.HTTP_400_BAD_REQUEST)
 
         course_time_obj=course_time_qs[0]
-        if course_time_obj.taken==True: # 강좌의 해당 시간을 이미 다른 사람이 쓰고 있을 때
+        if course_time_obj.taken==True: # 강좌의 해당 시간을 "현재" 이미 다른 사람이 쓰고 있을 때
             return response.Response(data={"failed" : "Course Time Already Taken"},status=status.HTTP_400_BAD_REQUEST)
 
         y,m,d=map(int,start_date.split('-'))
@@ -213,6 +199,8 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
 
     @action(methods=['get'],detail=False,url_path='history')
     def show_enrollment_history(self,request):
+        if not request.user.is_authenticated:
+            return response.Response(data={'failed' : 'User Not Logged In'},status=status.HTTP_401_UNAUTHORIZED)
         update_enrollment_left_count()
         expire_enrollments()
         enrollments=Enrollment.objects.filter(user_id=request.user.id).order_by('-start_date')
@@ -221,6 +209,8 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
 
     @action(methods=['get'],detail=False,url_path='unpaid')
     def show_enrollments_not_paid(self,request):
+        if not request.user.is_authenticated:
+            return response.Response(data={'failed' : 'User Not Logged In'},status=status.HTTP_401_UNAUTHORIZED)
         update_enrollment_left_count()
         expire_enrollments()
 

@@ -9,9 +9,13 @@ from .models import *
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        exclude = ['last_login', 'date_joined', 'groups', 'user_permissions']
+        exclude = ['last_login', 'date_joined', 'groups', 'user_permissions','password']
 
-    #auth_token=serializers.SerializerMethodField()
+
+class UserRegisterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        exclude = ['last_login', 'date_joined', 'groups', 'user_permissions','is_staff','is_superuser','is_active']
 
     def create(self, validated_data):
         user=User.objects.create_user(**validated_data)
@@ -26,10 +30,6 @@ class UserSerializer(serializers.ModelSerializer):
     def validate_password(self, value):
         password_validation.validate_password(value)
         return value
-
-    #def get_auth_token(self, obj):
-        #token = Token.objects.create(user=obj)
-        #return token.key
 
 
 class UserLoginSerializer(serializers.Serializer):

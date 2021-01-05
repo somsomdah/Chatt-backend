@@ -102,7 +102,7 @@ class CourseTime(models.Model):
 
 class CourseDetail(models.Model):
     course=models.ForeignKey('Course',on_delete=models.CASCADE,related_name='course_details')
-    week=models.PositiveIntegerField()
+    index=models.PositiveIntegerField()
     content=models.TextField()
 
     def __str__(self):
