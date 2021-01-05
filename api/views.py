@@ -33,7 +33,6 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(methods=['post'],detail=False,url_path='register',permissions_classes=[permissions.AllowAny])
     def register(self,request):
-
         user=create_user_account(**request.data)
         data=UserSerializer(user).data
 
