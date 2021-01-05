@@ -24,7 +24,7 @@ class UserViewSet(viewsets.ModelViewSet):
         'change_password':PasswordChangeSerializer
     }
 
-    @action(methods=['get'], detail=False,url_path='information',permissions_classes=[permissions.AllowAny])
+    @action(methods=['get'], detail=False,url_path='information')
     def information(self, request):
         user = request.user
         data = UserSerializer(user).data
@@ -62,7 +62,7 @@ class UserViewSet(viewsets.ModelViewSet):
         return response.Response(data=data,status=status.HTTP_200_OK)
 
 
-    @action(methods=['get'],detail=False,url_path='check-authentication')
+    @action(methods=['get'],detail=False,url_path='check-authentication',permissions_classes=[permissions.AllowAny])
     def check_authentication(self,request):
         print(request)
         if request.user.is_authenticated:
