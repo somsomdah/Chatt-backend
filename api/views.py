@@ -178,9 +178,9 @@ class CourseViewSet(viewsets.ModelViewSet):
         expire_enrollments()
 
         if self.queryset.count()>=3:
-            return response.Response(CourseSerializer(self.queryset[:3],many=True).data)
+            return response.Response(CourseAbstractSerializer(self.queryset[:3],many=True).data)
         else:
-            return response.Response(CourseSerializer(self.queryset,many=True).data)
+            return response.Response(CourseAbstractSerializer(self.queryset,many=True).data)
 
 
     def get_serializer_class(self):
