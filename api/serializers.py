@@ -17,10 +17,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         model = User
         exclude = ['last_login', 'date_joined', 'groups', 'user_permissions','is_staff','is_superuser','is_active']
 
-    def create(self, validated_data):
-        user=User.objects.create_user(**validated_data)
-        return user
-
     def validate_username(self, value):
         user = User.objects.filter(username=value)
         if user:
@@ -31,6 +27,9 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         password_validation.validate_password(value)
         return value
 
+    def create(self, validated_data):
+        user=User.objects.create_user(**validated_data)
+        return user
 
 class UserLoginSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=300, required=True)
@@ -62,6 +61,7 @@ class RelatedLocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = RelatedLocation
         fields = '__all__'
+
 
 class TeacherSerializer(serializers.ModelSerializer):
     related_locations=RelatedLocationSerializer(many=True)

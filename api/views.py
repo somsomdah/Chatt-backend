@@ -1,10 +1,11 @@
 from django.shortcuts import render,get_object_or_404
 from rest_framework.views import APIView
 from rest_framework import status,response,viewsets,permissions
-from django.contrib.auth import login,logout
 from rest_framework.decorators import action
 from django.utils import timezone
 from django.db.models import F, Q, Count
+from rest_framework_simplejwt.tokens import RefreshToken
+
 
 from .serializers import *
 from .models import *
@@ -33,6 +34,9 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(methods=['post'],detail=False,url_path='register',permissions_classes=[permissions.AllowAny])
     def register(self,request):
+        serializer=self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
         user=create_user_account(**request.data)
         data=UserSerializer(user).data
 
@@ -42,14 +46,13 @@ class UserViewSet(viewsets.ModelViewSet):
         return response.Response(data=data,status=status.HTTP_201_CREATED)
 
 
-    @action(methods=['get'],detail=False,url_path='logout')
+    @action(methods=['post'],detail=False,url_path='logout')
     def logout(self,request):
        refresh_token = request.data["refresh_token"]
        token = RefreshToken(refresh_token)
        token.blacklist()
        data={"sucsess":"Logout Successful"}
-
-       return Response(data=data,status=status.HTTP_205_RESET_CONTENT)
+       return response.Response(data=data,status=status.HTTP_205_RESET_CONTENT)
 
 
     @action(methods=['post'],detail=False,url_path='change-password')
@@ -155,19 +158,39 @@ class CourseViewSet(viewsets.ModelViewSet):
     def show_by_week(self,request):
         help= "Show courses by day of the week"
         expire_enrollments()
-        result={}
+        result=dict()
 
         if request.user.is_authenticated:
             for i in range(7):
                 courses=Course.objects.filter(course_times__day__exact=i,
                                             teacher__related_locations__dong=request.user.location_dong,
                                             teacher__related_locations__gu=request.user.location_gu)
+                course_ids=courses.values_list('id', flat=True)
+
                 result[i]=CourseAbstractSerializer(courses,many=True).data
+
+                for course in result[i]:
+                    times=""
+                    coursetimes=CourseTime.objects.filter(course_id=course['id'],day=i)
+                    for coursetime in coursetimes:
+                        times+=(str(coursetime.time)+" ")
+                    course['times']=times
+
 
         else:
             for i in range(7):
                 courses=Course.objects.filter(course_times__day__exact=i)
+                course_ids=courses.values_list('id', flat=True)
+                coursetimes=CourseTime.objects.filter(course_id__in=course_ids,day=i)
+
                 result[i]=CourseAbstractSerializer(courses,many=True).data
+
+                for course in result[i]:
+                    times=""
+                    coursetimes=CourseTime.objects.filter(course_id=course['id'],day=i)
+                    for coursetime in coursetimes:
+                        times+=(str(coursetime.time)+" ")
+                    course['times']=times
 
         return response.Response(result,status=status.HTTP_200_OK)
 
