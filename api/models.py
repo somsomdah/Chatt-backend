@@ -14,7 +14,7 @@ class User(AbstractUser):
 
 
 class Teacher(models.Model):
-    image=models.ImageField(null=True,blank=True,upload_to='image')
+    image=models.ImageField(null=True,blank=True,upload_to='media')
     name=models.CharField(max_length=20)
     nickname=models.CharField(max_length=40)
     phone=models.CharField(max_length=20)
@@ -74,7 +74,7 @@ class Enrollment(models.Model):
 class Record(models.Model):
     enrollment=models.ForeignKey('Enrollment',on_delete=models.CASCADE,related_name='records')
     date=models.DateField()
-    content=models.ImageField(null=True,blank=True,upload_to='image')
+    content=models.ImageField(null=True,blank=True,upload_to='media')
 
     class Meta:
         order_with_respect_to='enrollment'
@@ -89,9 +89,9 @@ class Course(models.Model):
     category=models.CharField(max_length=30,default='필라테스')
     is_visit=models.BooleanField(default=True)
     information=models.TextField()
-    image1=models.ImageField(null=True,blank=True,upload_to='image')
-    image2=models.ImageField(null=True,blank=True,upload_to='image')
-    image3=models.ImageField(null=True,blank=True,upload_to='image')
+    image1=models.ImageField(null=True,blank=True,upload_to='media')
+    image2=models.ImageField(null=True,blank=True,upload_to='mdeia')
+    image3=models.ImageField(null=True,blank=True,upload_to='mdeia')
     tag1=models.CharField(max_length=100,null=True,blank=True)
     tag2 = models.CharField(max_length=100, null=True, blank=True)
     tag3 = models.CharField(max_length=100, null=True, blank=True)
