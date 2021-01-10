@@ -30,9 +30,6 @@ SECRET_KEY = secrets["SECRET_KEY"]
 #DEBUG = True
 
 ALLOWED_HOSTS = secrets["ALLOWED_HOSTS"]
-#STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-#STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-#WHITENOISE_USE_FINDERS=True
 
 # Application definition
 
@@ -208,3 +205,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 #MEDIAFILES_LOCATION = 'media'
 #STATICFILES_LOCATION = 'static'
+
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTOCOL', 'https')
