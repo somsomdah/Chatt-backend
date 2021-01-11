@@ -37,7 +37,7 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer=self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user=create_user_account(**request.data)
+        user=create_user_account(**serializer.validated_data)
         data=UserSerializer(user).data
 
         update_enrollment_left_count()

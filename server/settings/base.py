@@ -201,4 +201,13 @@ DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 #STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 #MEDIAFILES_LOCATION = 'media'
+<<<<<<< Updated upstream
 #STATICFILES_LOCATION = 'static'
+=======
+#STATICFILES_LOCATION = 'static'
+
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTOCOL', 'https')
+
+>>>>>>> Stashed changes
