@@ -184,8 +184,6 @@ AWS_STORAGE_BUCKET_NAME=secrets['AWS_STORAGE_BUCKET_NAME']
 #AWS_S3_CUSTOM_DOMAIN = '%s.s3.%s.amazonaws.com' % (AWS_STORAGE_BUCKET_NAME,AWS_REGION)
 #AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
 AWS_S3_CUSTOM_DOMAIN='d3i9nsjaialmh4.cloudfront.net'
-
-
 AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
@@ -194,13 +192,12 @@ AWS_DEFAULT_ACL = None
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 #MEDIA_URL='d3i9nsjaialmh4.cloudfront.net/'
 MEDIA_URL = "https://%s/" % AWS_S3_CUSTOM_DOMAIN
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-#DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 #STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 #MEDIAFILES_LOCATION = 'media'
@@ -209,3 +206,4 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTOCOL', 'https')
+
