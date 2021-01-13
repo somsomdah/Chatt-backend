@@ -45,6 +45,9 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return response.Response(data=data,status=status.HTTP_201_CREATED)
 
+        #return response.Response(data={"test":"test"},status=status.HTTP_201_CREATED)
+
+
 
     @action(methods=['post'],detail=False,url_path='logout')
     def logout(self,request):

@@ -90,8 +90,8 @@ class Course(models.Model):
     is_visit=models.BooleanField(default=True)
     information=models.TextField()
     image1=models.ImageField(null=True,blank=True,upload_to='media')
-    image2=models.ImageField(null=True,blank=True,upload_to='mdeia')
-    image3=models.ImageField(null=True,blank=True,upload_to='mdeia')
+    image2=models.ImageField(null=True,blank=True,upload_to='media')
+    image3=models.ImageField(null=True,blank=True,upload_to='media')
     tag1=models.CharField(max_length=100,null=True,blank=True)
     tag2 = models.CharField(max_length=100, null=True, blank=True)
     tag3 = models.CharField(max_length=100, null=True, blank=True)
@@ -114,7 +114,7 @@ class CourseTime(models.Model):
         order_with_respect_to='course'
 
     def __str__(self):
-        return "{} | {} | {} | {}".format(self.course.name,self.day,self.time,self.taken)
+        return "{} | {} | {} | {} | {}".format(self.course.teacher.name,self.course.name,self.day,self.time,self.taken)
 
 class CourseDetail(models.Model):
     course=models.ForeignKey('Course',on_delete=models.CASCADE,related_name='course_details')

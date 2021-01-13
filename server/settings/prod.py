@@ -5,6 +5,7 @@ import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
 DEBUG = False  # 꼭 필요합니다.
+#DEBUG=True
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

@@ -9,7 +9,7 @@ from .models import *
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        exclude = ['last_login', 'date_joined', 'groups', 'user_permissions','password']
+        exclude = ['last_login', 'date_joined', 'groups', 'user_permissions']
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
