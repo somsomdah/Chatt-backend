@@ -114,7 +114,7 @@ class CourseTime(models.Model):
         order_with_respect_to='course'
 
     def __str__(self):
-        return "{} | {} | {} | {}".format(self.course.name,self.day,self.time,self.taken)
+        return "{} | {} | {} | {} | {}".format(self.course.teacher.name,self.course.name,self.day,self.time,self.taken)
 
 class CourseDetail(models.Model):
     course=models.ForeignKey('Course',on_delete=models.CASCADE,related_name='course_details')
