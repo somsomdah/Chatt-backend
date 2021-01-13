@@ -44,6 +44,8 @@ class Package(models.Model):
     price=models.PositiveIntegerField()
     duration=models.PositiveIntegerField()
     count=models.PositiveIntegerField()
+    class Meta:
+        ordering=['count']
     def __str__(self):
         return "횟수 : {} | 가격 : {} | 기한 : {}".format(self.count,self.price,self.duration)
 
@@ -63,7 +65,7 @@ class Enrollment(models.Model):
     valid=models.BooleanField(default=True) # valid == false means the enrollment is expired
 
     class Meta:
-        order_with_respect_to='user'
+        ordering=['user__id']
 
     def __str__(self):
         return "{} | {} | {} | {} {} |  (남은횟수){} | (유효성){} | (결제){}".format(self.course.category, self.course.name,
@@ -77,7 +79,7 @@ class Record(models.Model):
     content=models.ImageField(null=True,blank=True,upload_to='media')
 
     class Meta:
-        order_with_respect_to='enrollment'
+        ordering=['enrollment__id']
 
     def __str__(self):
         return "{} | {} | {}".format(self.enrollment.course.name,self.enrollment.user.username,self.date,)
@@ -97,7 +99,7 @@ class Course(models.Model):
     tag3 = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta:
-        order_with_respect_to='teacher'
+        ordering=['teacher__id']
 
     def __str__(self):
         return "{} | {}".format(self.teacher.name,self.name)
@@ -111,7 +113,7 @@ class CourseTime(models.Model):
     taken=models.BooleanField(default=False)
 
     class Meta:
-        order_with_respect_to='course'
+        ordering=['course__id']
 
     def __str__(self):
         return "{} | {} | {} | {} | {}".format(self.course.teacher.name,self.course.name,self.day,self.time,self.taken)
