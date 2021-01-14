@@ -100,8 +100,11 @@ class CourseViewSet(viewsets.ModelViewSet):
     def reserve(self,request,pk):
         help='reserve a course'
 
-        update_enrollment_left_count()
-        expire_enrollments()
+        #update_enrollment_left_count()
+        #expire_enrollments()
+
+        serializer=self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
         if not request.user.is_authenticated:
             return response.Response(data={'failed' : 'User Not Logged In'},status=status.HTTP_401_UNAUTHORIZED)
