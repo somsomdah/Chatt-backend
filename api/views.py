@@ -157,7 +157,7 @@ class CourseViewSet(viewsets.ModelViewSet):
         return response.Response(serializer.data,status=status.HTTP_200_OK)
 
 
-    @action(methods=['get'],detail=False,url_path='weekly')#,permissions_classes=[permissions.AllowAny])
+    @action(methods=['get'],detail=False,url_path='weekly',permissions_classes=[permissions.AllowAny])
     def show_by_week(self,request):
         help= "Show courses by day of the week"
         expire_enrollments()
@@ -167,8 +167,9 @@ class CourseViewSet(viewsets.ModelViewSet):
             for i in range(7):
                 courses=Course.objects.filter(course_times__day__exact=i,
                                             teacher__related_locations__dong=request.user.location_dong,
-                                            teacher__related_locations__gu=request.user.location_gu)
-                course_ids=courses.values_list('id', flat=True)
+                                            teacher__related_locations__gu=request.user.location_gu).distinct()
+                #course_ids=courses.values_list('id', flat=True).distinct()
+                #print(course_ids)
 
                 result[i]=CourseAbstractSerializer(courses,many=True).data
 
@@ -182,9 +183,9 @@ class CourseViewSet(viewsets.ModelViewSet):
 
         else:
             for i in range(7):
-                courses=Course.objects.filter(course_times__day__exact=i)
-                course_ids=courses.values_list('id', flat=True)
-                coursetimes=CourseTime.objects.filter(course_id__in=course_ids,day=i)
+                courses=Course.objects.filter(course_times__day__exact=i).distinct()
+                #course_ids=courses.values_list('id', flat=True).distinct()
+                #print(course_ids)
 
                 result[i]=CourseAbstractSerializer(courses,many=True).data
 
