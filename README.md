@@ -6,4 +6,4 @@
 ![](image/db_schema.png)
 
 ### Production Server
-- http://www.chatt-training.com/api/
+- https://www.chatt-training.com/api/
